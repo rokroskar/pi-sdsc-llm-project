@@ -1,0 +1,20 @@
+[project]
+name = "zuerich-fountain-dashboard"
+version = "0.1.0"
+description = "Interactive dashboard for Zurich water fountain locations with route planning"
+requires-python = ">=3.11"
+dependencies = [
+    "streamlit>=1.30.0",
+    "folium>=0.14.0",
+    "geopandas>=0.14.0",
+    "requests>=2.31.0",
+    "pandas>=2.1.0",
+    "numpy>=1.26.0",
+    "scipy>=1.11.0",
+    "streamlit-folium>=0.17.0",
+    "osmnx>=2.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
