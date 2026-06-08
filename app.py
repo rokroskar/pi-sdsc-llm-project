@@ -36,25 +36,12 @@ with col_a:
 with col_b:
     show_non_drinking = st.checkbox("🚫 No drinking water", value=False)
 
-fountain_type_filter = st.sidebar.selectbox(
-    "Water source",
-    options=["all"] + list(full_df["type"].unique()),
-    format_func=lambda x: {"all": "All sources"}.get(x, x),
-)
-
-status_filter = st.sidebar.selectbox(
-    "Ownership",
-    options=["all"] + [s for s in full_df["status"].unique() if s],
-    format_func=lambda x: {"all": "All owners"}.get(x, x),
-)
-
 # ─── Load Data ─────────────────────────────────────────────────
 @st.cache_data(ttl=3600)
 def get_fountain_data(force: bool = False) -> pd.DataFrame:
     return load_fountains(force_refresh=force)
 
 
-@st.cache_data(ttl=3600)
 def get_filtered_data(df: pd.DataFrame, drinking: bool, non_drinking: bool, type_f: str, status_f: str) -> pd.DataFrame:
     filtered = filter_fountains(df, drinking_water=drinking, fountain_type=type_f, status=status_f)
     if non_drinking:
@@ -71,7 +58,25 @@ with st.spinner("Loading fountain data..."):
         st.error(f"Failed to load fountain data: {e}")
         st.stop()
 
-filtered_df = get_filtered_data(full_df, show_drinking, show_arm, fountain_type_filter, status_filter)
+fountain_type_options = ["all"] + sorted(
+    [str(v) for v in full_df.get("type", pd.Series(dtype=str)).dropna().unique() if str(v).strip()]
+)
+fountain_type_filter = st.sidebar.selectbox(
+    "Water source",
+    options=fountain_type_options,
+    format_func=lambda x: {"all": "All sources"}.get(x, x),
+)
+
+status_options = ["all"] + sorted(
+    [str(v) for v in full_df.get("status", pd.Series(dtype=str)).dropna().unique() if str(v).strip()]
+)
+status_filter = st.sidebar.selectbox(
+    "Ownership",
+    options=status_options,
+    format_func=lambda x: {"all": "All owners"}.get(x, x),
+)
+
+filtered_df = get_filtered_data(full_df, show_drinking, show_non_drinking, fountain_type_filter, status_filter)
 
 # ─── Title & Summary ──────────────────────────────────────────
 st.title("🚰 Zürich Water Fountain Dashboard")
@@ -256,10 +261,12 @@ with tab_density:
         with col1:
             st.markdown("**Density by Latitude Band**")
             lat_density = filtered_df.groupby(lat_bins).size().sort_index()
+            lat_density.index = lat_density.index.astype(str)
             st.bar_chart(lat_density)
         with col2:
             st.markdown("**Density by Longitude Band**")
             lon_density = filtered_df.groupby(lon_bins).size().sort_index()
+            lon_density.index = lon_density.index.astype(str)
             st.bar_chart(lon_density)
     else:
         st.info("No fountains match the current filters. Try adjusting the filters.")
